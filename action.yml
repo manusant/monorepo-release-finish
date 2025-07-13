@@ -1,0 +1,45 @@
+name: 'Monorepo Release Finish'
+description: 'Finish a changeset release on a monorepo project'
+inputs:
+  git-user-name:
+    description: 'The git user name used to commit the changes'
+    required: true
+    default: 'github-actions[bot]'
+  git-user-email:
+    description: 'The git user email address used to commit the changes'
+    required: true
+    default: 'github-actions[bot]@users.noreply.github.com'
+  branch:
+    description: 'Working branch. Normally the develop/main branch.'
+    required: true
+  releaseBranch:
+    description: 'Release branch. Normally master branch.'
+    required: false
+  previousPackages:
+    description: 'JSON array of previous package versions.'
+    required: true
+  commitFileException:
+    description: 'Multiline of files to exclude from commit.'
+    required: false
+  version:
+    description: 'Release version. To be used for the git tag and GitHub release name.'
+    required: false
+  draft:
+    description: 'Create a draft release on GitHub.'
+    required: false
+  push:
+    description: 'Push changes to remote'
+    required: false
+outputs:
+  releaseCommit:
+    description: 'Git commit Id for the release changes.'
+  releaseTag:
+    description: 'Git tag for the release.'
+  releaseNotes:
+    description: 'Release notes. Includes release change-set.'
+branding:
+  icon: sunset
+  color: gray-dark
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

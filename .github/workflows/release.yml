@@ -1,0 +1,56 @@
+name: Release
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: [ubuntu-latest]
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    env:
+      CI: true
+      NODE_OPTIONS: --max-old-space-size=4096
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch branch
+        run: git fetch origin ${GITHUB_REF##*/}
+
+      - name: use node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: install dependencies
+        run: |
+          npm install
+          npm install -g @vercel/ncc
+
+      - name: Run Formatter
+        run: npm run format
+
+      - name: Run Changesets Release
+        id: start-monorepo-release
+        uses: manusant/monorepo-release-start@1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Build
+        run: npm run build
+
+      - name: Commit Release
+        shell: bash
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git commit -m "Release ${{ steps.start-monorepo-release.outputs.version }}"
+          git tag -a -m "Release ${{ steps.start-monorepo-release.outputs.version }}" ${{ steps.start-monorepo-release.outputs.version }}
+          git push --follow-tags
